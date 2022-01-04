@@ -1,0 +1,169 @@
+<?php
+/**
+ * The endpoint for Settings
+ *
+ * @link    https://gist.github.com/panoslyrakis/
+ * @since   1.0.0
+ *
+ * @author  Panos Lyrakis
+ * @package Gist_Sync\App\Rest_Endpoints\Settings
+ */
+
+namespace Gist_Sync\App\Rest_Endpoints\Settings;
+
+// Abort if called directly.
+defined( 'WPINC' ) || die;
+
+use Gist_Sync\Core\Controllers\Rest_Api;
+use Gist_Sync\Core\Models\Settings;
+
+/**
+ * Class Controller
+ *
+ * @package Gist_Sync\App\Rest_Endpoints\gist_sync
+ */
+
+class Controller extends Rest_Api {
+
+	public function _init() {
+
+		$this->namespace = "gist_sync_settings/{$this->version}";
+		$this->rest_base = 'save';
+
+		//add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+
+		return;
+
+		
+		$endpoint = array(
+			'namespace' => $this->namespace,
+			'route'     => $this->rest_base,
+			'args'      => array(
+				'methods'             => \WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'callback' ),
+				'permission_callback' => array( __CLASS__, 'permission_callback' ),
+			),
+			//'override'  => false,
+			'schema' => array( $this, 'get_public_item_schema' ),
+		);
+//error_log( '$endpoint: ' . print_r( $endpoint,true ) );
+		$this->add_endpoint( $endpoint );
+	}
+
+
+	public function register_routes() {
+		$this->namespace = "gist_sync_settings/{$this->version}";
+		$this->register_save_route();
+		
+	}
+
+	public function register_save_route() {
+		$this->rest_base = 'save';
+
+		error_log( '__IN__ Controller > register_save_route' );
+
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base,
+			array(
+				array(
+					'methods'             => \WP_REST_Server::EDITABLE,
+					'callback'            => array( $this, 'callback' ),
+					'permission_callback' => array( $this, 'permission_callback' ),
+				),
+				'schema' => array( $this, 'get_public_item_schema' ),
+			)
+		);
+	}
+
+	public function callback( $request ) {
+		$response_data = array(
+			'success'   => true,
+			'code'      => 'CODE',
+			'format'    => 'json',
+			'message'   => 'Body',
+			'completed' => true,
+		);
+		// Create the response object
+		$response = new \WP_REST_Response( $response_data );
+
+		// Add a custom status code.
+		// $response->set_status( 200 );
+
+		return $response;
+	}
+
+	/**
+	 * Rest request permissions. Returns a boolean or _doing_it_wrong notice.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return mixed|boolean|string Boolean or _doing_it_wrong notice.
+	 */
+	public static function permission_callback( \WP_REST_Request $request ) {
+		if ( ! is_user_logged_in() ) {
+			return new \WP_Error(
+				'rest_forbidden',
+				esc_html__( 'Not enough permissions.', 'gist_sync' ),
+				array( 'status' => 401 )
+			);
+		}
+
+		$user = wp_get_current_user();
+
+		if ( ! $user instanceof \WP_User || ! current_user_can( 'manage_options' ) ) {
+			return new \WP_Error(
+				'rest_forbidden',
+				esc_html__( 'Not enough permissions.', 'gist_sync' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 Get schema structure
+	 @return array
+	 */
+	public function get_item_schema() {
+		error_log( 'get_item_schema >> $this->schema: ' . print_r( $this->schema,true ) );
+		if ( $this->schema ) {
+			return $this->add_additional_fields_schema( $this->schema );
+		}
+		// TODO: complete this schema definition
+		// $this->schema = array();
+		$this->schema = array(
+			'$schema'    => 'http://json-schema.org/draft-04/schema#',
+			'title'      => $this->rest_base,
+			'type'       => 'object',
+			'properties' => array(
+				'enum'   => array(
+					'description' => esc_html__( 'The enum option part.', 'text_domain' ),
+					'type'        => 'string',
+					'context'     => array( 'view', 'edit' ),
+					'enum'        => array(
+						'good',
+						'bad',
+						'',
+					),
+					'readonly'    => false,
+				),
+				'string' => array(
+					'description' => esc_html__( 'The string option part.', 'text_domain' ),
+					'type'        => 'string',
+				),
+				'list'   => array(
+					'description' => esc_html__( 'The list option part.', 'text_domain' ),
+					'type'        => 'array',
+					'items'       => array(
+						'type' => 'integer',
+					),
+				),
+			),
+		);
+
+		return $this->add_additional_fields_schema( $this->schema );
+	}
+
+}

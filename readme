@@ -1,0 +1,30 @@
+In this project we use :
+@wordpress/scripts
+Tutorials: 
+https://www.npmjs.com/package/@wordpress/scripts
+https://javascriptforwp.com/wordpress-scripts-build-tool-tutorial/
+https://developer.wordpress.org/block-editor/packages/packages-scripts/
+https://developer.wordpress.org/block-editor/tutorials/javascript/js-build-setup/
+https://jeffreycarandang.com/create-gutenberg-block-plugin-wp-scripts-postcss-build/
+npm install @mui/material
+Also add the following requirements (mui docs don't include that... at least atthe time of writting this)
+npm install @emotion/react
+npm install @emotion/styled
+
+
+//Also npm install @material-ui/icons to install the icons package to the package.json dependencies.
+For mui 5 :
+npm install @mui/icons-material
+
+
+For the code editor we use ace (https://github.com/securingsincity/react-ace/tree/master):
+npm install react-ace ace-builds
+
+
+For the react code editor we use Monaco for react (https://www.npmjs.com/package/@monaco-editor/react#installation) because it has the clearest documentation:
+npm install @monaco-editor/react
+
+
+Uses axios too. To install it:
+npm install axios --save-dev
+Saved it as a dev dependency

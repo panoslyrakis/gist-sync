@@ -1,0 +1,45 @@
+{
+  "name": "gist-sync",
+  "version": "1.0.0",
+  "description": "Get In Sync With Your Gists",
+  "main": "src/index.js",
+  "dependencies": {
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
+    "@monaco-editor/react": "^4.3.1",
+    "@mui/icons-material": "^5.0.3",
+    "@mui/material": "^5.2.6",
+    "@wordpress/element": "^4.0.4"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^5.1.0",
+    "axios": "^0.21.1",
+    "css-loader": "^0.28.11",
+    "ignore-emit-webpack-plugin": "^2.0.6",
+    "mini-css-extract-plugin": "^1.3.4",
+    "node-sass": "^5.0.0",
+    "path": "^0.12.7",
+    "postcss-loader": "^4.2.0",
+    "postcss-preset-env": "^6.7.0",
+    "sass-loader": "^10.1.1"
+  },
+  "scripts": {
+    "build": "wp-scripts build",
+    "build:plugin-scripts": "npm run build:gist-sync-adminpage-scripts",
+    "build:gist-sync-adminpage-scripts": "wp-scripts build app/admin-pages/gist-sync/assets/scripts/main.js --output-path=assets/scripts/admin-pages/gist-sync",
+    "build:gistfiles-metabox-scripts": "wp-scripts build app/metaboxes/gistfile/assets/scripts/main.js --output-path=assets/scripts/metaboxes/gistfile",
+    "check-engines": "wp-scripts check-engines",
+    "check-licenses": "wp-scripts check-licenses",
+    "lint:css": "wp-scripts lint-style",
+    "lint:js": "wp-scripts lint-js",
+    "lint:pkg-json": "wp-scripts lint-pkg-json",
+    "start": "wp-scripts start app/admin-pages/gist-sync/assets/scripts/main.js --output-path=assets/scripts/admin-pages/gist-sync",
+    "watch:gist-sync": "wp-scripts start app/admin-pages/gist-sync/assets/scripts/main.js --output-path=assets/scripts/admin-pages/gist-sync",
+    "watch:gistfiles-metabox-scripts": "wp-scripts start app/metaboxes/gistfile/assets/scripts/main.js --output-path=assets/scripts/metaboxes/gistfile",
+    "watch:gist-sync-settings-scripts": "wp-scripts start app/admin-pages/settings/assets/scripts/main.js --output-path=assets/scripts/admin-pages/settings",
+    "test:e2e": "wp-scripts test-e2e",
+    "test:unit": "wp-scripts test-unit-js"
+  },
+  "author": "Panos Lyrakis",
+  "license": "1 GNU V2+, MIT"
+}

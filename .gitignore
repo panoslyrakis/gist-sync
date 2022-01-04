@@ -1,0 +1,18 @@
+# Ignore hidden files and directories
+.DS_Store
+.idea
+# Ignore system files
+composer.lock
+npm-debug.log
+package-lock.json
+# Ignore dynamic files
+app/admin-pages/smush-toolkit/assets
+# Except critical.css file
+!admin/assets/css/critical.css
+# Ignore build directories and tmp folders
+build
+languages
+misc/tmp
+node_modules
+tests/output
+vendor

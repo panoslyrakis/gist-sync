@@ -1,0 +1,243 @@
+<?php
+/**
+ * Rest endpoint.
+ *
+ * @link    https://gist.github.com/panoslyrakis/
+ * @since   1.0.0
+ *
+ * @author  Panos Lyrakis
+ * @package Gist_Sync\Core\Controllers
+ */
+
+namespace Gist_Sync\Core\Controllers;
+
+// If this file is called directly, abort.
+defined( 'WPINC' ) || die;
+
+use Gist_Sync\Core\Utils\Abstracts\Base;
+
+/**
+ * Class Capability
+ *
+ * @package Gist_Sync\Core\Controllers
+ */
+class Rest_Api extends \WP_REST_Controller {
+	/**
+     * The version or rest api.
+     *
+     * @since 1.0.0
+     * @var string
+     */
+    protected $version = 'v1';
+
+	/**
+	 * The rest url prefix. WP Default is wp-json.
+	 *
+	 * @var string $rest_url_prefix The rest url prefix.
+	 *
+	 * @since 1.0.0
+	 */
+	private $rest_url_prefix = 'rest-api';
+
+	/**
+	 * List of all Rest Endpoints of plugin.
+	 *
+	 * @var array $rest_routes The rest endpoints.
+	 *
+	 * @since 1.0.0
+	 */
+	protected static $rest_routes = array();
+
+	/**
+	 * Singleton constructor.
+	 *
+	 * Protect the class from being initiated multiple times.
+	 *
+	 * @since 1.0.0
+	 */
+	protected function __construct() {
+		// Protect class from being initiated multiple times.
+	}
+
+	/**
+	 * Instance obtaining method.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return static Called class instance.
+	 */
+	public static function instance() {
+		static $instances = array();
+
+		// @codingStandardsIgnoreLine Plugin-backported
+		$called_class_name = get_called_class();
+
+		if ( ! isset( $instances[ $called_class_name ] ) ) {
+			$instances[ $called_class_name ] = new $called_class_name();
+		}
+
+		return $instances[ $called_class_name ];
+	}
+
+	/**
+	 * Init Endpoints condroller
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void Initialize the Endpoint's methods.
+	 */
+	public function init() {
+		// We need to add conditions as it is messing with all custom endpoints url prefix.
+		// add_filter( 'rest_url_prefix', array( $this, 'rest_url_prefix' ) );
+		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+	}
+
+	public function register_routes() {
+		error_log( 'PARENT register_routes' );
+	}
+	/**
+	 * Filter the url prefix (default is wp-json) of the endpoint.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string The url prefix.
+	 */
+	public function rest_url_prefix() {
+		return $this->get_rest_url_prefix();
+	}
+
+	protected function register_route() {}
+
+	/**
+	 * Set the route params of the endpoint.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void Set Endpoints.
+	 */
+	public function set_endpoints() {
+		error_log( '_IN__ set_endpoints' );
+		$this->register_route();
+		return;
+
+		$rest_routes = $this->get_rest_routes();
+		
+
+		if ( ! empty( $rest_routes ) ) {
+			foreach ( $rest_routes as $rest_route ) {
+				if ( ! is_array( $rest_route ) ||
+					empty( $rest_route ) ||
+					! isset( $rest_route['namespace'] ) ||
+					! isset( $rest_route['route'] )
+				) {
+					continue;
+				}
+
+				$args = wp_parse_args(
+					isset( $rest_route['args'] ) ? $rest_route['args'] : array(),
+					array(
+						// WP_REST_Server::READABLE || WP_REST_Server::EDITABLE || WP_REST_Server::CREATABLE || WP_REST_Server::DELETABLE || WP_REST_Server::ALLMETHODS
+						// https://developer.wordpress.org/reference/classes/wp_rest_server/
+						'methods'             => array( \WP_REST_Server::READABLE ),
+						'callback'            => array( __CLASS__, 'callback' ),
+						'permission_callback' => array( __CLASS__, 'permission_callback' ),
+					)
+				);
+
+				$route_params = apply_filters(
+					'pluginbase/rest_api_params',
+					array(
+						'namespace' => $rest_route['namespace'],
+						'route'     => $rest_route['route'],
+						'args'      => $args,
+						'override'  => false,
+						'schema'    => array( $this, 'get_public_item_schema' ),
+					)
+				);
+//error_log( '$route_params: ' . print_r( $route_params,true ) );
+				register_rest_route(
+					\trailingslashit( $route_params['namespace'] ),
+					$route_params['route'],
+					array(
+						$route_params['args'],
+						$route_params['schema'],
+					),
+					$route_params['override']
+				);
+
+
+
+/*
+				register_rest_route(
+					$this->namespace,
+					'/' . $this->rest_base,
+					array(
+						array(
+							'methods'             => WP_REST_Server::READABLE,
+							'callback'            => array( $this, 'get_item' ),
+							'permission_callback' => array( $this, 'get_item_permissions_check' ),
+						// TODO: complete this endpoint definition
+						),
+
+						'schema' => array( $this, 'get_public_item_schema' ),
+					)
+				);
+				*/
+
+			}
+		}
+	}
+
+	/**
+	 * Gets all the rest roures set for plugin.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array List of Endpoints.
+	 */
+	private function get_rest_routes() {
+		return self::$rest_routes;
+	}
+
+	/**
+	 * Returns the url prefix set in class property.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string The url prefix.
+	 */
+	protected function get_rest_url_prefix() {
+		return apply_filters(
+			'pluginbase/rest_url_prefix',
+			$this->rest_url_prefix,
+			$this
+		);
+	}
+
+	/**
+	 * Returns an array with all properties required for register_rest_route.
+	 *
+	 * @since 1.0.0
+	 * 
+	 * @param string $endpoint The endpoint.
+	 *
+	 * @return array An array with the register_rest_route properties.
+	 */
+	protected function add_endpoint( array $endpoint = array() ) {
+		self::$rest_routes[] = $endpoint;
+	}
+
+	/**
+	 * Rest request permissions. Returns a boolean or _doing_it_wrong notice. True for public access.
+	 * https://make.wordpress.org/core/2020/07/22/rest-api-changes-in-wordpress-5-5/
+	 *
+	 * @since 1.0.0
+	 * 
+	 * @param WP_REST_Request $request The request.
+	 *
+	 * @return mixed|boolean|string Boolean or _doing_it_wrong notice.True for public access.
+	 */
+	public static function permission_callback( \WP_REST_Request $request ) {
+		return true;
+	}
+}

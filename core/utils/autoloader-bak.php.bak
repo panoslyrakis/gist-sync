@@ -1,0 +1,73 @@
+<?php
+/**
+ * The core auto loader class.
+ *
+ * @link    https://gist.github.com/panoslyrakis/
+ * @since   1.0.0
+ *
+ * @author  Panos Lyrakis
+ * @package Gist_Sync/Core/Utils
+ */
+
+// Only if required.
+if ( ! function_exists( 'gist_sync_autoloader' ) ) {
+	/**
+	 * The autoload function being registered. If null, then the default implementation of spl_autoload() will be registered.
+	 *
+	 * @param string $class_name The fully-qualified name of the class to load.
+	 *
+	 * @since 1.0.0
+	 */
+	function gist_sync_autoloader( $class_name ) {
+		// If the specified $class_name does not include our namespace, duck out.
+		if ( false === strpos( $class_name, 'Gist_Sync' ) ) {
+			return;
+		}
+
+		// Split the class name into an array to read the namespace and class.
+		$file_parts = explode( '\\', $class_name );
+
+		// Do a reverse loop through $file_parts to build the path to the file.
+		$namespace = '';
+		for ( $i = count( $file_parts ) - 1; $i > 0; $i-- ) {
+
+			// Read the current component of the file part.
+			$current = str_ireplace( '_', '-', strtolower( $file_parts[ $i ] ) );
+			// If we're at the first entry, then we're at the filename.
+			if ( count( $file_parts ) - 1 === $i ) {
+				
+				if( in_array( 'Interfaces', $file_parts ) ) {
+					$interface_name = explode( '_', $file_parts[ count( $file_parts ) - 1 ] );
+					$interface_name = strtolower( $interface_name[0] );
+
+					$file_name = "interface-$interface_name.php";
+
+				} elseif( in_array( 'Traits', $file_parts ) ) {
+					$trait_name = explode( '_', $file_parts[ count( $file_parts ) - 1 ] );
+					$trait_name = strtolower( $trait_name[0] );
+
+					$file_name = "trait-$trait_name.php";
+					
+				} else {
+					$file_name = "class-$current.php";
+				}
+			} else {
+				$namespace = '/' . $current . $namespace;
+			}
+		}
+
+		// Now build a path to the file using mapping to the file location.
+		$filepath  = trailingslashit( untrailingslashit( plugin_dir_path( dirname( __DIR__ ) ) ) . $namespace );
+		$filepath .= $file_name;
+		
+		// If the file exists in the specified path, then include it.
+		if ( file_exists( $filepath ) ) {
+			include_once $filepath;
+		}
+	}
+}
+
+/**
+ * Register autoloader callback.
+ */
+spl_autoload_register( 'gist_sync_autoloader' );
