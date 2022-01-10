@@ -38,11 +38,11 @@ abstract class User_Profile extends Base {
 	 *
 	 * @param int   $user_id The user id.
 	 *
-	 * @param array $params The parameters passed from Controller.
+	 * @param array $profile_fields The parameters passed from Controller.
 	 *
 	 * @param bool  $return Return or print.
 	 *
-	 * @return void Render the output.
+	 * @return void|string Render the output.
 	 */
 	public function render( int $user_id, array $profile_fields = array(), bool $return = false ) {
 		$this->set_model();

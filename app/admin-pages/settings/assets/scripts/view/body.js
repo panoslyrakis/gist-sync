@@ -52,10 +52,20 @@ export default function SettingsTable() {
 
 	// Set up initial values.
 	useEffect(() => {
-		setUsername( default_settings.username );
-		setGlobalTokenStatus( default_settings.globaltokenstatus );
-		setGlobalToken( default_settings.globaltoken );
-		setUserRolesAllowed( JSON.parse( default_settings.userrolesallowed ) );
+		if ( 'undefined' !== typeof default_settings.username ) {
+			setUsername( default_settings.username );
+		}
+
+		if ( 'undefined' !== typeof default_settings.username ) {
+			setGlobalTokenStatus( default_settings.globaltokenstatus );
+		}
+		if ( 'undefined' !== typeof default_settings.username ) {
+			setGlobalToken( default_settings.globaltoken );
+		}
+		if ( 'undefined' !== typeof default_settings.username ) {
+			setUserRolesAllowed( JSON.parse( default_settings.userrolesallowed ) );
+		}
+
 	}, default_settings); // Run only when default_settings changess
 
 	/*

@@ -15,10 +15,20 @@ namespace Gist_Sync\App\Post_Types\Gist;
 defined( 'WPINC' ) || die;
 
 use Gist_Sync\Core\Models\Post_Type;
+use Gist_Sync\App\Options\Settings\Model as Settings;
 use Gist_Sync\App\Post_Types\Gist\Controller;
 use Gist_Sync\App\Modules\Gist_Api;
 use Gist_Sync\App\Post_Types\Gist\Controller as Gist;
 use Gist_Sync\App\Post_Types\GistFile\Controller as GistFile;
+use WP_Error;
+use WP_HTTP_Response;
+use WP_Post;
+use function get_post_meta;
+use function is_wp_error;
+use function json_decode;
+use function json_encode;
+use function sanitize_text_field;
+use function update_post_meta;
 
 /**
  * Class Controller
@@ -48,13 +58,11 @@ class Model extends Post_Type {
 	/**
 	 * Save Post Type. Usually triggered on save_post action.
 	 *
-	 * @since 1.0.0
-	 *
-	 * @param int     $post_ID The post ID.
-	 * @param WP_Post $post The WP_Post object.
-	 * @param bool    $update Whether this is an existing post being updated or a new one.
+	 * @param array $files Array containing files to save.
 	 *
 	 * @return void Save Post Type.
+	 * @since 1.0.0
+	 *
 	 */
 	public function save_gist( array $files = array() ) {
 		$files        = $this->format_files( $files );
@@ -64,18 +72,18 @@ class Model extends Post_Type {
 		// We might need to delete files.
 
 		// if ( ! $synced_files ) {
-			// Logger::log( __( 'Could not sync files on gist.github.com ) );
+		// Logger::log( __( 'Could not sync files on gist.github.com ) );
 		// }
 	}
 
 	/**
 	 * Prepare files array structure to be gist api compatible.
 	 *
-	 * @since 1.0.0
-	 *
 	 * @param array $files The files list.
 	 *
 	 * @return array $files Formatted files ready for gist api
+	 * @since 1.0.0
+	 *
 	 */
 	public function format_files( array $files = array() ) {
 		if ( empty( $files ) ) {
@@ -96,51 +104,61 @@ class Model extends Post_Type {
 	/**
 	 * Sync Post Type. Usually triggered on save_post action.
 	 *
+	 * @param array $files The list of files to be synced in gist.github.com.
+	 *
+	 * @return bool|object True if synced succesfully or WP_Error if synced failed.
 	 * @since 1.0.0
 	 *
-	 * @param WP_Post $post The WP_Post object.
-	 * @param Array   $files The list of files to be synced in gist.github.com.
-	 *
-	 * @return bool|WP_Error True if synced succesfully or WP_Error if synced failed.
 	 */
 	protected function sync( array $files = array() ) {
-		$post          = Gist::instance()->__get( 'wp_post' );
-		$api           = Gist_Api::init( 'username', 'token' );
-		$gist_meta     = $this->get_gist_meta( $post );
-		$gist_link     = isset( $gist_meta['url'] ) ? $gist_meta['url'] : '';
-		$gist_id       = isset( $gist_meta['id'] ) ? $gist_meta['id'] : '';
-		$api_response  = null;
-		$error_message = esc_html__( 'Something is wrong', 'gist-sync' );
-		$current_files = array_keys( $api->get_gist_files( $gist_id ) );
-		$remove_files  = array_diff( $current_files, array_keys( $files ) );
+		$api_response = null;
+		$post         = Gist::instance()->__get( 'wp_post' );
+		$creds        = Settings::instance()->get_creds();
+		$username     = $creds['username'] ?? '';
+		$token        = $creds['token'] ?? '';
+		$api          = Gist_Api::init( $username, $token );
 
-		if ( ! empty( $remove_files ) ) {
-			foreach ( $remove_files as $file_to_be_removed ) {
-				/**
-				 * To delete a gist file, set it's content to empty:
-				 * https://github.community/t/deleting-or-renaming-files-in-a-multi-file-gist-using-github-api/170967
-				 */
-				$files[ $file_to_be_removed ] = array( 'content' => '' );
-			}
+		if ( is_wp_error( $api ) ) {
+			return false;
 		}
 
-		$api_response = ( ! empty( $gist_id ) ) ?
-			$api->update_gist( $gist_id, $post->post_title, $files ) :
-			$api->add_gist( $post->post_title, $files );
+		$gist_meta     = $this->get_gist_meta( $post );
+		$gist_link     = $gist_meta['url'] ?? '';
+		$gist_id       = $gist_meta['id'] ?? '';
+		$error_message = esc_html__( 'Something is wrong', 'gist-sync' );
 
-		if ( ! $api_response instanceof \WP_HTTP_Response ) {
-			return new \WP_Error(
+		if ( empty( $gist_id ) ) {
+			$api_response = $api->add_gist( $post->post_title, $files );
+		} else {
+			$current_files = array_keys( $api->get_gist_files( $gist_id ) );
+			$remove_files  = array_diff( $current_files, array_keys( $files ) );
+
+			if ( ! empty( $remove_files ) ) {
+				foreach ( $remove_files as $file_to_be_removed ) {
+					/**
+					 * To delete a gist file, set it's content to empty:
+					 * https://github.community/t/deleting-or-renaming-files-in-a-multi-file-gist-using-github-api/170967
+					 */
+					$files[ $file_to_be_removed ] = array( 'content' => '' );
+				}
+			}
+
+			$api_response = $api->update_gist( $gist_id, $post->post_title, $files );
+		}
+
+		if ( ! $api_response instanceof WP_HTTP_Response ) {
+			return new WP_Error(
 				'gist-sync-failled',
 				$error_message
 			);
 		}
 
-		$response_data = \json_decode( $api_response->get_data(), true );
+		$response_data = json_decode( $api_response->get_data(), true );
 
 		if ( 201 !== $api_response->get_status() ) {
 			$error_message = isset( $response_data['message'] ) ? esc_html( $response_data['message'] ) : $error_message;
 
-			return new \WP_Error(
+			return new WP_Error(
 				'gist-sync-failled',
 				$error_message
 			);
@@ -148,7 +166,7 @@ class Model extends Post_Type {
 
 		$gist_url  = isset( $response_data['url'] ) ? esc_html( $response_data['url'] ) : '';
 		$gist_id   = isset( $response_data['id'] ) ? esc_html( $response_data['id'] ) : '';
-		$gist_meta = \json_encode(
+		$gist_meta = json_encode(
 			array(
 				'url' => $gist_url,
 				'id'  => $gist_id,
@@ -157,11 +175,19 @@ class Model extends Post_Type {
 
 		$this->set_gist_meta( $post, $gist_meta );
 
-
 		// We might need to add/update/delete files locally and remotely.
 		return $this->adjust_local_files( $api_response );
 	}
 
+	/**
+	 * Adjust local files if local storage is active.
+	 *
+	 * @param object $response_data The WP_HTTP_Response.
+	 *
+	 * @return bool|object True if synced succesfully or WP_Error if synced failed.
+	 * @since 1.0.0
+	 *
+	 */
 	protected function adjust_local_files( $response_data ) {
 		// @TODO: When option to store local files is add we need to adjust local storage in DB.
 		// We need to check if insert or update
@@ -173,6 +199,8 @@ class Model extends Post_Type {
 		// 2. Find if any files have been removed and remove them from local (might need to remove from remote as well)
 
 		// Then we need to check if there are any files to delete or update
+
+		return true;
 	}
 
 	protected function update_gist_local() {
@@ -186,14 +214,14 @@ class Model extends Post_Type {
 	/**
 	 * Sync Post Type. Usually triggered on save_post action.
 	 *
-	 * @since 1.0.0
-	 *
 	 * @param WP_Post $post The WP_Post object.
-	 * @param Array   $files The list of files to be synced in gist.github.com.
+	 * @param Array $files The list of files to be synced in gist.github.com.
 	 *
 	 * @return void Save Post Type.
+	 * @since 1.0.0
+	 *
 	 */
-	protected function get_files_to_remove( \WP_Post $post, array $files = array() ) {
+	protected function get_files_to_remove( WP_Post $post, array $files = array() ) {
 		global $wpdb;
 		$gistfile = new GistFile();
 
@@ -214,14 +242,14 @@ class Model extends Post_Type {
 	/**
 	 * Set the gist meta..
 	 *
-	 * @param WP_Post     $post The WP_Post object.
+	 * @param WP_Post $post The WP_Post object.
 	 *
 	 * @param string|json $meta The gist meta. Includes gist id and url.
 	 *
 	 * @return void
 	 */
-	protected function set_gist_meta( \WP_Post $post, string $meta = '' ) {
-		\update_post_meta( $post->ID, $this->gist_meta_key, \sanitize_text_field( $meta ) );
+	protected function set_gist_meta( WP_Post $post, string $meta = '' ) {
+		update_post_meta( $post->ID, $this->gist_meta_key, sanitize_text_field( $meta ) );
 	}
 
 	/**
@@ -231,9 +259,9 @@ class Model extends Post_Type {
 	 *
 	 * @return Array An array if found else empty.
 	 */
-	protected function get_gist_meta( \WP_Post $post ) {
-		return \json_decode(
-			\get_post_meta( $post->ID, $this->gist_meta_key, true ),
+	protected function get_gist_meta( WP_Post $post ) {
+		return json_decode(
+			get_post_meta( $post->ID, $this->gist_meta_key, true ),
 			true
 		);
 	}

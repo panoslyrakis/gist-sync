@@ -172,6 +172,7 @@ final class Loader extends Base {
 			apply_filters(
 				'gist_sync_load_components',
 				array(
+					'Options',
 					'Admin_Pages',
 					'Rest_Endpoints',
 					//'Shortcodes',
@@ -204,12 +205,13 @@ final class Loader extends Base {
 	 *
 	 * @since 1.0.0
 	 * 
-	 * @var string $component The component name which is the folder name that contains the component files (mvc etc).
+	 * @var string|null $component The component name which is the folder name that contains the component files (mvc
+	 * etc).
 	 * 
 	 * @var string $namespace The namespace where the component belongs to. Default is App which derives from the `plugin_path/app` main folder.
 	 * 
 	 */
-	private function load_component( string $component = null, string $namespace = 'App' ) {
+	private function load_component( ?string $component = null, string $namespace = 'App' ) {
 		if ( ! \is_null( $component ) ) {
 			$component_path_part = \str_replace( '_', '-', $component );
 			$component_path      = \strtolower( \trailingslashit( GISTSYNC_DIR ) . \trailingslashit( $namespace ) . \trailingslashit( $component_path_part ) );

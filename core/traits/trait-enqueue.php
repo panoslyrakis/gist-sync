@@ -1,6 +1,6 @@
 <?php
 /**
- * Wrapper class for egistering and enqueueing scripts and styles.
+ * Wrapper class for registering and enqueueing scripts and styles.
  *
  * @link    https://gist.github.com/panoslyrakis/
  * @since   1.0.0
@@ -15,6 +15,7 @@ namespace Gist_Sync\Core\Traits;
 defined( 'WPINC' ) || die;
 
 use Gist_Sync\Core\Loader as Core;
+use function method_exists;
 
 /**
  * Class Core
@@ -26,48 +27,49 @@ trait Enqueue {
 	/**
 	 * Styles to be registered.
 	 *
+	 * @return void Styles to be registered.
 	 * @since 1.0.0
 	 *
-	 * @return void Styles to be registered.
 	 */
 	public static $styles = array();
 
 	/**
 	 * JS assets url.
 	 *
+	 * @return void JS assets url.
 	 * @since 1.0.0
 	 *
-	 * @return void JS assets url.
 	 */
 	public $scripts_dir = GISTSYNC_ASSETS_URL . 'scripts/';
 
 	/**
 	 * CSS assets url.
 	 *
+	 * @return void CSS assets url.
 	 * @since 1.0.0
 	 *
-	 * @return void CSS assets url.
 	 */
 	public $style_dir = GISTSYNC_ASSETS_URL . 'styles/';
 
 	/**
 	 * Set scripts.
 	 *
+	 * @return void Set scripts.
 	 * @since 1.0.0
 	 *
-	 * @return void Set scripts.
 	 */
-	public function set_scripts() {}
+	public function set_scripts() {
+	}
 
 	/**
-	 * Pepare scripts.
-	 *
-	 * @since 1.0.0
+	 * Prepare scripts.
 	 *
 	 * @return void Prepare scripts.
+	 * @since 1.0.0
+	 *
 	 */
 	public function prepare_scripts() {
-		if ( \method_exists( $this, 'set_scripts' ) ){
+		if ( method_exists( $this, 'set_scripts' ) ) {
 			Core::$scripts = array_merge( Core::$scripts, $this->set_scripts() );
 		}
 	}
@@ -75,33 +77,38 @@ trait Enqueue {
 	/**
 	 * Register Style.
 	 *
-	 * @since 1.0.0
-	 * 
 	 * @param string $handle The handle.
 	 * @param string $src The src.
 	 * @param array $deps The deps.
-	 * @param bollean $ver The ver.
+	 * @param bool $ver The ver.
 	 * @param string $media The media.
 	 *
 	 * @return void Register style.
+	 * @since 1.0.0
+	 *
 	 */
-	public function register_styles( $handle, $src, $deps = array(), $ver = false, $media = 'all' ) {
+	public function register_styles(
+		string $handle, string $src, array $deps = array(), bool $ver = false, string $media =
+	'all'
+	) {
 		error_log( 'Trait Enqueue register_style called' );
 	}
 
 	/**
-	 * Generate random id. Usefull for creating element ids in scripts
-	 *
-	 * @since 1.0.0
+	 * Generate random id. Useful for creating element ids in scripts
 	 *
 	 * @param string $prefix Optional. A prefix
 	 *
-	 * @return string Generate unique id. Not completelly random, it is predictable so it should not cause issues in cache.
+	 * @return string Generate unique id. Not completely random, it is predictable, so it should not cause issues in
+	 * cache.
+	 * @since 1.0.0
+	 *
 	 */
-	public function get_unique_id( $prefix = null ) : string {
+	public function get_unique_id( $prefix = null ): string {
 		if ( is_null( $prefix ) ) {
 			$prefix = uniqid() . '_';
 		}
+
 		return wp_unique_id( $prefix );
 	}
 

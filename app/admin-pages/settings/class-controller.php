@@ -16,7 +16,7 @@ defined( 'WPINC' ) || die;
 
 use Gist_Sync\Core\Controllers\Admin_Page;
 use Gist_Sync\App\Admin_Pages\Settings\View;
-use Gist_Sync\Core\Models\Settings as Settings_Api;
+use Gist_Sync\App\Options\Settings\Model as Settings;
 
 /**
  * Class Controller
@@ -28,9 +28,9 @@ class Controller extends Admin_Page {
 	/**
 	 * Prepares the properties of the Admin Page.
 	 *
+	 * @return void Prepares properties of the Admin page.
 	 * @since 1.0.0
 	 *
-	 * @return void Prepares properties of the Admin page.
 	 */
 	public function prepare_props() {
 		$this->is_submenu  = true;
@@ -46,9 +46,9 @@ class Controller extends Admin_Page {
 	/**
 	 * Admin Menu Callback.
 	 *
+	 * @return void The callback function of the Admin Menu Page.
 	 * @since 1.0.0
 	 *
-	 * @return void The callback function of the Admin Menu Page.
 	 */
 	public function callback() {
 		View::instance()->render(
@@ -61,9 +61,9 @@ class Controller extends Admin_Page {
 	/**
 	 * Register scripts for the admin page.
 	 *
+	 * @return array Register scripts for the admin page.
 	 * @since 1.0.0
 	 *
-	 * @return array Register scripts for the admin page.
 	 */
 	public function set_scripts() {
 		return array(
@@ -80,7 +80,7 @@ class Controller extends Admin_Page {
 							'unique_id'      => $this->unique_id,
 							'nonce'          => wp_create_nonce( 'wp_rest' ),
 							'user_roles'     => wp_json_encode( $this->get_user_roles() ),
-							'settings'       => wp_json_encode( Settings_Api::instance()->get() ),
+							'settings'       => wp_json_encode( Settings::instance()->get() ),
 						),
 						'labels' => array(
 							'page_title'     => $this->page_title,
@@ -97,9 +97,9 @@ class Controller extends Admin_Page {
 	/**
 	 * Get user roles.
 	 *
+	 * @return array List of all site roles.
 	 * @since 1.0.0
 	 *
-	 * @return array List of all site roles.
 	 */
 	protected function get_user_roles() {
 		global $wp_roles;

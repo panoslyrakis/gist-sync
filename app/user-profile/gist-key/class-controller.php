@@ -17,7 +17,7 @@ defined( 'WPINC' ) || die;
 use Gist_Sync\Core\Controllers\User_Profile;
 use Gist_Sync\App\User_Profile\Gist_Key\View;
 use Gist_Sync\App\User_Profile\Gist_Key\Model;
-use Gist_Sync\Core\Models\Settings as Settings_Api;
+use Gist_Sync\App\Options\Settings\Model as Settings;
 
 /**
  * Class Controller
@@ -28,9 +28,9 @@ class Controller extends User_Profile {
 	/**
 	 * Set usermeta keys.
 	 *
+	 * @return void.
 	 * @since 1.0.0
 	 *
-	 * @return array List of usermeta keys.
 	 */
 	protected function set_usermeta_fields() {
 		$this->usermeta_fields = array(
@@ -51,9 +51,9 @@ class Controller extends User_Profile {
 	/**
 	 * Set usermeta heading.
 	 *
+	 * @return array List of usermeta heading.
 	 * @since 1.0.0
 	 *
-	 * @return array List of usermeta heading.
 	 */
 	protected function set_usermeta_heading() {
 		$this->usermeta_heading = __( 'Sync to Gist', 'gist_sync' );
@@ -61,35 +61,36 @@ class Controller extends User_Profile {
 
 	/** Set up params for metaboxes that will be used to call "add_meta_box" for users.
 	 *
-	 * @since 1.0.0
-	 *
-	 * @param object $user The WP_User object.
+	 * @param \WP_User $user The WP_User object.
 	 *
 	 * @return void
+	 * @since 1.0.0
+	 *
 	 */
 	public function show_profile( \WP_User $user ) {
-		$settings = Settings_API::instance()->get( 'globalTokenStatus' );
+		$settings = Settings::instance()->get( 'globalTokenStatus' );
 
 		if ( $settings ) {
 			return;
 		}
 
-		$profile_fields = array(
-			'heading' => __( 'Sync to Gist', 'gist_sync' ),
-			'fields'  => $this->get_usermeta_fields(),
-		);
+		$roles_allowed = Settings::instance()->get( 'userrolesallowed' );
 
-		View::instance()->render( $user->ID, $profile_fields );
+		if ( ! empty( $roles_allowed ) && Settings::instance()->user_role_allowed( json_decode( $roles_allowed, true
+			), $user->ID ) ) {
+			parent::show_profile( $user );
+		}
 	}
 
 	/** Prepare parent Core User_Profile.
 	 *
+	 * @return void
 	 * @since 1.0.0
 	 *
-	 * @return void
 	 */
 	protected function setup() {
 		$this->model = Model::instance();
 		$this->view  = View::instance();
 	}
 }
+

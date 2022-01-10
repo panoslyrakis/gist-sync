@@ -67,15 +67,13 @@ class Gist_Api {
 	 * @param string $username Gist account username.
 	 * @param string $token Gist account personal token.
 	 *
-	 * @return Gist_Api An instance of object.
+	 * @return object An instance of object.
 	 */
 	public static function init( string $username = '', string $token = '' ) {
 		if ( empty( $username ) || empty( $token ) ) {
-			return new WP_Error( 'invalid_call', __( 'Missing information', 'gist-sync' ) );
+			return new \WP_Error( 'invalid_call', __( 'Missing information', 'gist-sync' ) );
 		}
 
-		$token           = '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';
-		$username        = 'panoslyrakis';
 		static $instance = null;
 		self::$username  = $username;
 		self::$token     = $token;
@@ -96,11 +94,11 @@ class Gist_Api {
 	 * @param string $description The gist description.
 	 * @param array  $files The list of files.
 	 *
-	 * @return \WP_HTTP_Response An WP_HTTP_Response object containing the data of the gist.
+	 * @return object An WP_HTTP_Response object containing the data of the gist.
 	 */
 	public function update_gist( string $gist_id = '', string $description = '', array $files = array() ) {
 		if ( empty( $gist_id ) || empty( $description ) ) {
-			return new WP_Error( 'invalid_request_data', __( 'Missing data', 'gist-sync' ) );
+			return new \WP_Error( 'invalid_request_data', __( 'Missing data', 'gist-sync' ) );
 		}
 
 		$this->url    = wp_normalize_path( path_join( $this->url_base, $gist_id ) );
@@ -123,11 +121,11 @@ class Gist_Api {
 	 * @param string $description The gist description.
 	 * @param array  $files The list of files.
 	 *
-	 * @return \WP_HTTP_Response An WP_HTTP_Response object containing the data of the gist.
+	 * @return object An WP_HTTP_Response object containing the data of the gist.
 	 */
 	public function add_gist( string $description = '', array $files = array() ) {
 		if ( empty( $description ) ) {
-			return new WP_Error( 'invalid_request_data', __( 'Missing gist description.', 'gist-sync' ) );
+			return new \WP_Error( 'invalid_request_data', __( 'Missing gist description.', 'gist-sync' ) );
 		}
 
 		$this->url    = $this->url_base;
@@ -149,11 +147,11 @@ class Gist_Api {
 	 *
 	 * @param string $gist_id The gist id.
 	 *
-	 * @return \WP_HTTP_Response An WP_HTTP_Response object containing the data of the gist.
+	 * @return object An WP_HTTP_Response object containing the data of the gist.
 	 */
 	public function get_gist( string $gist_id = '' ) {
 		if ( empty( $gist_id ) ) {
-			return new WP_Error( 'invalid_request_data', __( 'Missing gist id.', 'gist-sync' ) );
+			return new \WP_Error( 'invalid_request_data', __( 'Missing gist id.', 'gist-sync' ) );
 		}
 
 		$this->url    = wp_normalize_path( path_join( $this->url_base, $gist_id ) );
@@ -172,11 +170,11 @@ class Gist_Api {
 	 *
 	 * @param string $gist_id The gist id.
 	 *
-	 * @return array An array containg gist files or empty array.
+	 * @return array|object An array containg gist files or empty array.
 	 */
 	public function get_gist_files( string $gist_id = '' ) {
 		if ( empty( $gist_id ) ) {
-			return new WP_Error( 'invalid_request_data', __( 'Missing gist id.', 'gist-sync' ) );
+			return new \WP_Error( 'invalid_request_data', __( 'Missing gist id.', 'gist-sync' ) );
 		}
 
 		$response_data = \json_decode( $this->get_gist( $gist_id )->data, true );
@@ -190,7 +188,7 @@ class Gist_Api {
 	 *
 	 * @param array $args Request arguments.
 	 *
-	 * @return WP_HTTP_Response
+	 * @return object WP_HTTP_Response
 	 */
 	protected function request( array $args = array() ) {
 		$response     = null;

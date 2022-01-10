@@ -16,6 +16,8 @@ defined( 'WPINC' ) || die;
 
 use Gist_Sync\Core\Utils\Abstracts\Base;
 use Gist_Sync\Core\Traits\Enqueue;
+use WP_User;
+use function add_action;
 
 /**
  * Class Core
@@ -24,10 +26,10 @@ use Gist_Sync\Core\Traits\Enqueue;
  */
 abstract class User_Profile extends Base {
 	/**
-	* Use the Enqueue Trait.
-	*
-	* @since 1.0.0
-	*/
+	 * Use the Enqueue Trait.
+	 *
+	 * @since 1.0.0
+	 */
 	use Enqueue;
 
 	/**
@@ -69,9 +71,9 @@ abstract class User_Profile extends Base {
 	/**
 	 * Init Metabox.
 	 *
+	 * @return void Init the metabox.
 	 * @since 1.0.0
 	 *
-	 * @return void Init the metabox.
 	 */
 	public function init() {
 		if ( ! $this->can_boot() ) {
@@ -85,40 +87,41 @@ abstract class User_Profile extends Base {
 		/**
 		 * Admininstrator actions for user profile.
 		 */
-		\add_action( 'show_user_profile', array( $this, 'show_profile' ) );
-		\add_action( 'personal_options_update', array( $this, 'update_profile' ) );
+		add_action( 'show_user_profile', array( $this, 'show_profile' ) );
+		add_action( 'personal_options_update', array( $this, 'update_profile' ) );
 
 		/**
 		 * User actions for his profile.
 		 */
-		\add_action( 'edit_user_profile', array( $this, 'show_profile' ) );
-		\add_action( 'edit_user_profile_update', array( $this, 'update_profile' ) );
+		add_action( 'edit_user_profile', array( $this, 'show_profile' ) );
+		add_action( 'edit_user_profile_update', array( $this, 'update_profile' ) );
 	}
 
 	/**
 	 * To boot or not to boot?
 	 *
+	 * @return boolean Checks if admin page actions/scripts should load. Useful for enqueing scripts.
 	 * @since 1.0.0
 	 *
-	 * @return boolean Checks if admin page actions/scripts should load. Useful for enqueing scripts.
 	 */
 	protected function can_boot() {
 		global $pagenow;
 
 		return (
 			is_admin() &&
-			in_array( $pagenow, array( 'user-edit.php', 'user-new.php' ) )
+			in_array( $pagenow, array( 'profile.php', 'user-edit.php', 'user-new.php' ) )
 		);
 	}
+
 	/** Set up params for metaboxes that will be used to generate HTML in View.
 	 *
-	 * @since 1.0.0
-	 * 
 	 * @param object $user The WP_User object.
 	 *
 	 * @return void
+	 * @since 1.0.0
+	 *
 	 */
-	public function show_profile( \WP_User $user ){
+	public function show_profile( WP_User $user ) {
 		$profile_fields = array(
 			'heading' => $this->get_usermeta_heading(),
 			'fields'  => $this->get_usermeta_fields(),
@@ -130,11 +133,11 @@ abstract class User_Profile extends Base {
 	/**
 	 * Set the metabox args.
 	 *
-	 * @since 1.0.0
-	 * 
-	 * @param int $user_id The user id
+	 * @param int|null $user_id The user id
 	 *
 	 * @return void
+	 * @since 1.0.0
+	 *
 	 */
 	public function update_profile( ?int $user_id = null ) {
 		$user_meta_keys = $this->get_usermeta_keys();
@@ -156,18 +159,19 @@ abstract class User_Profile extends Base {
 	/**
 	 * Set usermeta keys.
 	 *
+	 * @return array Set the list of usermeta keys.
 	 * @since 1.0.0
 	 *
-	 * @return array Set the list of usermeta keys.
 	 */
-	protected function set_usermeta_fields() {}
+	protected function set_usermeta_fields() {
+	}
 
 	/**
 	 * Get usermeta keys.
 	 *
+	 * @return array Get the list of usermeta keys.
 	 * @since 1.0.0
 	 *
-	 * @return array Get the list of usermeta keys.
 	 */
 	protected function get_usermeta_keys() {
 		if ( empty( $this->usermeta_fields ) ) {
@@ -180,18 +184,19 @@ abstract class User_Profile extends Base {
 	/**
 	 * Set usermeta heading.
 	 *
+	 * @return array Set usermeta heading.
 	 * @since 1.0.0
 	 *
-	 * @return array Set usermeta heading.
 	 */
-	protected function set_usermeta_heading() {}
+	protected function set_usermeta_heading() {
+	}
 
 	/**
 	 * Get usermeta heading.
 	 *
+	 * @return array Get usermeta heading.
 	 * @since 1.0.0
 	 *
-	 * @return array Get usermeta heading.
 	 */
 	protected function get_usermeta_heading() {
 		return $this->usermeta_heading;
@@ -200,9 +205,9 @@ abstract class User_Profile extends Base {
 	/**
 	 * Get usermeta fields.
 	 *
+	 * @return array Get the list of usermeta fields.
 	 * @since 1.0.0
 	 *
-	 * @return array Get the list of usermeta fields.
 	 */
 	protected function get_usermeta_fields() {
 		return $this->usermeta_fields;

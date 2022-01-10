@@ -14,8 +14,7 @@ namespace Gist_Sync\App\Rest_Endpoints\Settings;
 // Abort if called directly.
 defined( 'WPINC' ) || die;
 
-use Gist_Sync\Core\Controllers\Rest_Api;
-use Gist_Sync\Core\Models\Settings as Settings_Api;
+use Gist_Sync\App\Options\Settings\Model as Settings;
 use Gist_Sync\App\Rest_Endpoints\Settings\Includes\Schema;
 
 /**
@@ -166,7 +165,7 @@ class Controller extends \WP_REST_Controller {
 	public function save_settings( \WP_REST_Request $request ) {
 		$this->request_action = $request->get_param( 'action' );
 		$settings             = $this->filter_settings_keys( $request->get_params() );
-		$saved_response       = Settings_Api::instance()->save( $settings );
+		$saved_response       = Settings::instance()->save( $settings );
 		$response_data        = array(
 			'message'     => __( 'Settings saved', 'gist_sync' ),
 			'status_code' => 200,
@@ -254,8 +253,8 @@ class Controller extends \WP_REST_Controller {
 	 * @return mixed|WP_REST_Response
 	 */
 	public function get_settings( \WP_REST_Request $request ) {
-		// Return settings fetched from Settings_Api.
-		return rest_ensure_response( Settings_Api::instance()->get() );
+		// Return settings fetched from Settings.
+		return rest_ensure_response( Settings::instance()->get() );
 	}
 
 	/**

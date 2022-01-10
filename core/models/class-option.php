@@ -22,32 +22,35 @@ use Gist_Sync\Core\Traits\Sanitize;
  *
  * @package Gist_Sync\Core\Models
  */
-class Settings extends Base {
+class Option extends Base {
 	/**
-	* Use the Sanitize Trait.
-	*
-	* @since 1.0.0
-	*/
+	 * Use the Sanitize Trait.
+	 *
+	 * @since 1.0.0
+	 */
 	use Sanitize;
 
-	private $option_key = 'gist-sync';
+	protected $option_key;
+
 	/**
 	 * Save Options in DB.
 	 *
-	 * @since 1.0.0
+	 * @param array $options The options to save.
 	 *
-	 * @param array  $options The options to save.
+	 * @param bool $override Optional
 	 *
-	 * @param bool   $override Optional
+	 * @param string|null $option_key Optional nullable option_key.
 	 *
-	 * @param string $option_key Optional nullable option_key.
-	 * 
 	 * @param bool $autoload To autoload option or not. Default is false
 	 *
 	 * @return bool True if saved succesfully.
+	 * @since 1.0.0
+	 *
 	 */
-	public function save( array $options = array(), bool $override = false, ?string $option_key = null, ?bool $autoload = false ) {
-		$option_key = ! \is_null( $option_key ) ? $option_key : $this->option_key;
+	public function save(
+		array $options = array(), bool $override = false, ?string $option_key = null, ?bool $autoload = false
+	): bool {
+		$option_key = ! is_null( $option_key ) ? $option_key : $this->option_key;
 
 		if ( ! $override ) {
 			$current_options = $this->get( null, $option_key );
@@ -58,7 +61,7 @@ class Settings extends Base {
 
 			$options = wp_parse_args( $options, $current_options );
 		}
-		
+
 		return update_option(
 			$option_key,
 			wp_json_encode( $this->sanitize_array( $options ) ),
@@ -69,16 +72,16 @@ class Settings extends Base {
 	/**
 	 * Get Options from DB.
 	 *
-	 * @since 1.0.0
-	 *
 	 * @param string|null $settings_key Specific settings key. If null it returns all options.
 	 *
-	 * @param string      $option_key Optional nullable option_key.
+	 * @param string|null $option_key Optional nullable option_key.
 	 *
-	 * @return array Returns an array with options.
+	 * @return array|string Returns an array with options.
+	 * @since 1.0.0
+	 *
 	 */
 	public function get( ?string $settings_key = null, ?string $option_key = null ) {
-		$option_key = ! \is_null( $option_key ) ? $option_key : $this->option_key;
+		$option_key = ! is_null( $option_key ) ? $option_key : $this->option_key;
 		// Options are expected to be stored as json.
 		$options = json_decode( get_option( $option_key ), true );
 
@@ -86,7 +89,7 @@ class Settings extends Base {
 			$options = array();
 		}
 
-		if ( ! \is_null( $settings_key ) ) {
+		if ( ! is_null( $settings_key ) ) {
 			$settings_key = sanitize_key( $settings_key );
 			$options      = isset( $options[ $settings_key ] ) ? $options[ $settings_key ] : array();
 		}
